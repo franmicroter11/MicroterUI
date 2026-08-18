@@ -20,7 +20,7 @@ public sealed class GeometryAnalysis
     {
         ArgumentNullException.ThrowIfNull(figures);
 
-        Figures = figures;
+        Figures = Array.AsReadOnly(figures.ToArray());
         Bounds = bounds;
     }
 }
