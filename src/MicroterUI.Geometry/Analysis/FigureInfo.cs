@@ -20,7 +20,7 @@ public sealed class FigureInfo
     {
         ArgumentNullException.ThrowIfNull(segments);
 
-        Segments = segments;
+        Segments = Array.AsReadOnly(segments.ToArray());
         IsClosed = isClosed;
         Bounds = bounds;
     }
