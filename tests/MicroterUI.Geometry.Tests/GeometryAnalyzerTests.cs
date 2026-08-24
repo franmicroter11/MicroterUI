@@ -20,6 +20,26 @@ public sealed class GeometryAnalyzerTests
     }
 
     [Fact]
+    public void Analyze_MultipleEmptyFigures_PreservesFiguresAndEmptyBounds()
+    {
+        var figures = new[]
+        {
+            new FigureInfo(Array.Empty<SegmentInfo>(), false, Rect.Empty),
+            new FigureInfo(Array.Empty<SegmentInfo>(), true, Rect.Empty),
+            new FigureInfo(Array.Empty<SegmentInfo>(), false, Rect.Empty)
+        };
+
+        var result = new GeometryAnalyzer().Analyze(figures);
+
+        Assert.Equal(3, result.FigureCount);
+        Assert.Equal(0, result.SegmentCount);
+        Assert.Equal(Rect.Empty, result.Bounds);
+        Assert.False(result.Figures[0].IsClosed);
+        Assert.True(result.Figures[1].IsClosed);
+        Assert.False(result.Figures[2].IsClosed);
+    }
+
+    [Fact]
     public void Analyze_NullFigures_Throws()
     {
         var analyzer = new GeometryAnalyzer();
@@ -61,6 +81,67 @@ public sealed class GeometryAnalyzerTests
     }
 
     [Fact]
+    public void Analyze_NegativeBounds_PreservesFullUnion()
+    {
+        var figures = new[]
+        {
+            new FigureInfo(
+                Array.Empty<SegmentInfo>(),
+                false,
+                new Rect(-100, -50, 20, 10)),
+            new FigureInfo(
+                Array.Empty<SegmentInfo>(),
+                false,
+                new Rect(-20, -10, 30, 40))
+        };
+
+        var result = new GeometryAnalyzer().Analyze(figures);
+
+        Assert.Equal(new Rect(-100, -50, 110, 80), result.Bounds);
+    }
+
+    [Fact]
+    public void Analyze_DegenerateSegments_AreCountedWithoutChangingFigureSemantics()
+    {
+        var segments = new[]
+        {
+            new SegmentInfo(0, SegmentKind.Line, new Point(5, 5), new Point(5, 5)),
+            new SegmentInfo(1, SegmentKind.Line, new Point(-2, 3), new Point(-2, 3))
+        };
+
+        var figures = new[]
+        {
+            new FigureInfo(segments, true, new Rect(-2, 3, 7, 2))
+        };
+
+        var result = new GeometryAnalyzer().Analyze(figures);
+
+        Assert.Equal(1, result.FigureCount);
+        Assert.Equal(2, result.SegmentCount);
+        Assert.True(result.Figures[0].IsClosed);
+        Assert.Equal(new Rect(-2, 3, 7, 2), result.Bounds);
+    }
+
+    [Fact]
+    public void Analyze_LargeCoordinates_PreservesBounds()
+    {
+        const double min = -1_000_000_000_000d;
+        const double max = 1_000_000_000_000d;
+
+        var figures = new[]
+        {
+            new FigureInfo(
+                Array.Empty<SegmentInfo>(),
+                false,
+                new Rect(min, min, max - min, max - min))
+        };
+
+        var result = new GeometryAnalyzer().Analyze(figures);
+
+        Assert.Equal(new Rect(min, min, max - min, max - min), result.Bounds);
+    }
+
+    [Fact]
     public void Analyze_CalculatesTotalSegmentCount()
     {
         var segments = new[]
@@ -86,6 +167,19 @@ public sealed class GeometryAnalyzerTests
 
         Assert.Equal(2, result.FigureCount);
         Assert.Equal(4, result.SegmentCount);
+    }
+
+    [Fact]
+    public void Analyze_ResultPreservesFigureOrder()
+    {
+        var first = new FigureInfo(Array.Empty<SegmentInfo>(), false, new Rect(10, 10, 1, 1));
+        var second = new FigureInfo(Array.Empty<SegmentInfo>(), true, new Rect(-10, -10, 2, 2));
+        var figures = new[] { first, second };
+
+        var result = new GeometryAnalyzer().Analyze(figures);
+
+        Assert.Same(first, result.Figures[0]);
+        Assert.Same(second, result.Figures[1]);
     }
 
     [Fact]
