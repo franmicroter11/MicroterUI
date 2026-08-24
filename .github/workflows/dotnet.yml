@@ -1,0 +1,23 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test geometry
+        run: dotnet test tests/MicroterUI.Geometry.Tests/MicroterUI.Geometry.Tests.csproj --configuration Release --no-restore
