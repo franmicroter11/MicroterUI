@@ -19,5 +19,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Restore
+        run: dotnet restore tests/MicroterUI.Geometry.Tests/MicroterUI.Geometry.Tests.csproj
+
       - name: Test geometry
         run: dotnet test tests/MicroterUI.Geometry.Tests/MicroterUI.Geometry.Tests.csproj --configuration Release --no-restore
